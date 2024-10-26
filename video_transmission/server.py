@@ -1,28 +1,35 @@
 import cv2
-import numpy as np
+import struct
 import pickle
 import socket
 
-
-server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-HOST = "192.168.1.104"
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+HOST_IP = socket.gethostbyname(socket.gethostname())
 PORT = 9999
+server_socket.bind((HOST_IP, PORT))
 
-server.bind((HOST, PORT))
+server_socket.listen()
+print("listenin for incoming connections")
 
 while True:
-    x = server.recvfrom(1000000)
-    clientip = x[1][0]
+    #bunun blocklamasi gerekiyor cunku asagidaki islemleri client_sockete bagliymis gibi yapiyoruz
+    #gerci hata donmez if client_socket dedigimizden
+    #ama zaten amacimiz bir cliente baglanmaksa ona baglanmadan bir seyler yapmak zaten mantiksiz
+    #yapcaksan beklemeye girmeden yap client baglaninca bir seyler yapmak serverin isi
+    client_socket, address = server_socket.accept()
+    print("got connection from ", address)
     
-    data = pickle.loads(x[0])
-    
-    frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
-
-    cv2.imshow("Frame",frame)
-
-    key = cv2.waitKey(1)
-
-    if(key == ord("q")):
-        break
-
+    #asagida q'ya basarsak client_socketi kapatiyoruz iste o zaman daha buraya girmicek
+    if client_socket:
+        cap = cv2.VideoCapture(0)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            a = pickle.dumps(frame)
+            #L 4 byte integer icin, Q 8 byte integer icin
+            message = struct.pack("Q", len(a)) + a 
+            client_socket.sendall(message)
+            cv2.imshow("transmitting video", frame)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("d"):
+                client_socket.close()
+                break
