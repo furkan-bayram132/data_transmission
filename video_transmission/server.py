@@ -27,6 +27,10 @@ while True:
             a = pickle.dumps(frame)
             #L 4 byte integer icin, Q 8 byte integer icin
             message = struct.pack("Q", len(a)) + a 
+            print("len message : " + str(len(message)))
+            #tcp burada verinin tamami gidene kadar threadi blockladigi icin video akisi cok yavas oluyor
+            #udp gibi yollayip bloklamayan bir protokol lazim ya da burada veriyi sendall yerine kucuk kucuk 
+            #gonderebilmek lazim
             client_socket.sendall(message)
             cv2.imshow("transmitting video", frame)
             key = cv2.waitKey(1) & 0xFF
