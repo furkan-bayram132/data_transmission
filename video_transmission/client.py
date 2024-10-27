@@ -39,7 +39,8 @@ while True:
     #verinin 4090'i o veriye aitti bu demek oluyor ki sondaki 6 byte veri diger frameye ait
     #iste o 6 byteyi data'ya ilettik
     data = data[message_size:]
-    frame = pickle.loads(frame_data)
+    #cv2.Imread_color ne incele
+    frame = cv2.imdecode(pickle.loads(frame_data),cv2.IMREAD_COLOR)
     cv2.imshow("receiving video", frame)
     key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):

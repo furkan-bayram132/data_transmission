@@ -24,9 +24,12 @@ while True:
         cap = cv2.VideoCapture(0)
         while cap.isOpened():
             ret, frame = cap.read()
-            a = pickle.dumps(frame)
+            #once imencode ile jpgye cevirmem lazim sonra pickle dumps
+            #son parametreyi incele
+            result,jpgframe = cv2.imencode(".jpg",frame,[int(cv2.IMWRITE_JPEG_QUALITY), 90])
+            pickledframe = pickle.dumps(jpgframe)
             #L 4 byte integer icin, Q 8 byte integer icin
-            message = struct.pack("Q", len(a)) + a 
+            message = struct.pack("Q", len(pickledframe)) + pickledframe 
             print("len message : " + str(len(message)))
             #tcp burada verinin tamami gidene kadar threadi blockladigi icin video akisi cok yavas oluyor
             #udp gibi yollayip bloklamayan bir protokol lazim ya da burada veriyi sendall yerine kucuk kucuk 
