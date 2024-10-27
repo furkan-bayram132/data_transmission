@@ -26,6 +26,7 @@ while True:
             ret, frame = cap.read()
             #once imencode ile jpgye cevirmem lazim sonra pickle dumps
             #son parametreyi incele
+            frame = cv2.flip(frame,1)
             result,jpgframe = cv2.imencode(".jpg",frame,[int(cv2.IMWRITE_JPEG_QUALITY), 90])
             pickledframe = pickle.dumps(jpgframe)
             #L 4 byte integer icin, Q 8 byte integer icin
@@ -34,9 +35,17 @@ while True:
             #tcp burada verinin tamami gidene kadar threadi blockladigi icin video akisi cok yavas oluyor
             #udp gibi yollayip bloklamayan bir protokol lazim ya da burada veriyi sendall yerine kucuk kucuk 
             #gonderebilmek lazim
-            client_socket.sendall(message)
+            try:
+                client_socket.sendall(message)
+            except: #buraya giriyorsa client baglantisini koparmistir
+                cap.release()
+                cv2.destroyAllWindows()
+                break
+
             cv2.imshow("transmitting video", frame)
             key = cv2.waitKey(1) & 0xFF
             if key == ord("d"):
+                cap.release()
+                cv2.destroyAllWindows()
                 client_socket.close()
                 break

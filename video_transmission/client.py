@@ -2,6 +2,7 @@ import cv2
 import socket
 import pickle
 import struct
+import sys
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 HOST_IP = "192.168.1.104" #bu ipnin sabit kalmasi lazim veya bizim bunu alabilmemiz lazim buna bak mutlaka ve sunumda soyle
@@ -19,7 +20,7 @@ while True:
     #sonraki operasyonlarimiza devam edebilmemiz icin hali hazirda sahip oldugumuz framenin boyutunu bilmek zorundayiz
     while len(data) < payload_size:
         packet = client_socket.recv(4*1024) #4kb buffer -> burasi buffer alis
-        if not packet: break #
+        if not packet: sys.exit() #
         data += packet #??????
 
     #iste burada gordugumuz gibi yukardan el ettigimiz datadan en az bir 8 byte veri gelmis olmasi lazimdi
