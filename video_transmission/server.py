@@ -8,7 +8,7 @@ HOST_IP = socket.gethostbyname(socket.gethostname())
 PORT = 9999
 server_socket.bind((HOST_IP, PORT))
 
-server_socket.listen()
+server_socket.listen(1)
 print("listenin for incoming connections")
 
 while True:
@@ -27,7 +27,7 @@ while True:
             #once imencode ile jpgye cevirmem lazim sonra pickle dumps
             #son parametreyi incele
             frame = cv2.flip(frame,1)
-            result,jpgframe = cv2.imencode(".jpg",frame,[int(cv2.IMWRITE_JPEG_QUALITY), 90])
+            result,jpgframe = cv2.imencode(".jpg",frame,[int(cv2.IMWRITE_JPEG_QUALITY), 30])
             pickledframe = pickle.dumps(jpgframe)
             #L 4 byte integer icin, Q 8 byte integer icin
             message = struct.pack("Q", len(pickledframe)) + pickledframe 

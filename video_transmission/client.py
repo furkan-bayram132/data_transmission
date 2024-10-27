@@ -19,7 +19,7 @@ while True:
     #cunku gonderdigimiz datanin ilk 8 bytesi framenin boyutunu veriyor
     #sonraki operasyonlarimiza devam edebilmemiz icin hali hazirda sahip oldugumuz framenin boyutunu bilmek zorundayiz
     while len(data) < payload_size:
-        packet = client_socket.recv(4*1024) #4kb buffer -> burasi buffer alis
+        packet = client_socket.recv(8*1024) #4kb buffer -> burasi buffer alis
         if not packet: sys.exit() #
         data += packet #??????
 
@@ -33,7 +33,7 @@ while True:
     #data boyu o mesajin sizesinden kucukse yani mesajin tamami daha gelmemisse
     while len(data) < message_size:
         #4kblik veriler halinde aliyoruz datamizi
-        data += client_socket.recv(4*1024)
+        data += client_socket.recv(8*1024)
     #ayni frameye ait olan kismi frame_data olarak aliyoruz
     frame_data = data[:message_size]
     #hani paso 4096 byte veri geliyordu ya atiyorum yukardaki looptan gelen son 4096 byte
