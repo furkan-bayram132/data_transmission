@@ -5,7 +5,8 @@ import struct
 import sys
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-HOST_IP = "192.168.1.104" #bu ipnin sabit kalmasi lazim veya bizim bunu alabilmemiz lazim buna bak mutlaka ve sunumda soyle
+
+HOST_IP = input("enter host ip : ") #bu ipnin sabit kalmasi lazim veya bizim bunu alabilmemiz lazim buna bak mutlaka ve sunumda soyle
 PORT = 9999
 
 client_socket.connect((HOST_IP, PORT))
