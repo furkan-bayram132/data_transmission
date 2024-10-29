@@ -1,94 +1,51 @@
+import cv2
+import struct
+import pickle
 import socket
 
-host = socket.gethostbyname(socket.gethostname())
-#sadece bu computerdan baglanmak istiyorsak local host kullanabiliyoruz anladigim kadariyla 
-#local hostu arastir 
-#ama eger bir lan olusturmak istiyorsam veya diger bilgisayalarin bana internetten baglanabilemesini
-#istiyorsam local host yerine local ip addressi kullanmam gerekiyor
-#ipv4 nedir
-HOST = "192.168.1.104" #local ip address
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+HOST_IP = socket.gethostbyname(socket.gethostname())
 PORT = 9999
+server_socket.bind((HOST_IP, PORT))
 
-#bu socket sadece baglanti isteklerini acceptlemek icin 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-server.bind((HOST, PORT))
-
-#tam anlamadim
-server.listen(5)
+server_socket.listen(1)
+print("listenin for incoming connections")
 
 while True:
-    #baglandigimiz cihazlarla konusabilmek icin her baglantiya bir socket atiyoruz
-    #iste bu socketler araciligiyla her cihazla ayri ayri konusuyoruz
-    print("buraya girdi")
-    communication_socket, address = server.accept()
-    print(f"connected to {address}")
-    #1024 byte ne anlama geliyor
-    message = communication_socket.recv(1024).decode("utf-8")
-    print(f"message from client : {message}")
-    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
-    communication_socket.send("hello from server".encode("utf-8"))
-    #communication_socket.close()
-    print(f"connection with {address} ended")
+    #bunun blocklamasi gerekiyor cunku asagidaki islemleri client_sockete bagliymis gibi yapiyoruz
+    #gerci hata donmez if client_socket dedigimizden
+    #ama zaten amacimiz bir cliente baglanmaksa ona baglanmadan bir seyler yapmak zaten mantiksiz
+    #yapcaksan beklemeye girmeden yap client baglaninca bir seyler yapmak serverin isi
+    client_socket, address = server_socket.accept()
+    print("got connection from ", address)
+    
+    #asagida q'ya basarsak client_socketi kapatiyoruz iste o zaman daha buraya girmicek
+    if client_socket:
+        cap = cv2.VideoCapture(0)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            #once imencode ile jpgye cevirmem lazim sonra pickle dumps
+            #son parametreyi incele
+            frame = cv2.flip(frame,1)
+            result,jpgframe = cv2.imencode(".jpg",frame,[int(cv2.IMWRITE_JPEG_QUALITY), 30])
+            pickledframe = pickle.dumps(jpgframe)
+            #L 4 byte integer icin, Q 8 byte integer icin
+            message = struct.pack("Q", len(pickledframe)) + pickledframe 
+            print("len message : " + str(len(message)))
+            #tcp burada verinin tamami gidene kadar threadi blockladigi icin video akisi cok yavas oluyor
+            #udp gibi yollayip bloklamayan bir protokol lazim ya da burada veriyi sendall yerine kucuk kucuk 
+            #gonderebilmek lazim
+            try:
+                client_socket.sendall(message)
+            except: #buraya giriyorsa client baglantisini koparmistir
+                cap.release()
+                cv2.destroyAllWindows()
+                break
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-#socket turu olarak interneti kullaniyoruz (1.parametre)
-#2.parametre ise tcp protokolunu kullaniyoruz
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#we want to bind the server to a specific address now 
-#0.0.0.0 otomatik olarak bu bilgisayari server olarak dusunup bu bilgisayarin ip adresini alır ve
-#9999 numarali porta baglar
-server.bind(("0.0.0.0", 9999))
-
-#ayni anda porta 5 tane baglanti kabul edilebilir
-server.listen(5)
-
-while True:
-    #addr is the address of the client that is connected to the server
-    #client direkt client instancesi boylece o client ile communicate edebiliriz
-    client,addr = server.accept()
-    #we are gonna receive a 1024 bytes messsage, decode it and then print it 
-    print(client.recv(1024).decode())
-    #clienteye bir mesaj gonderecez mesaji sifreleyip yani encode edip gondermemiz gererkiyor? neden
-    client.send("hello from server".encode())
-    """
+            cv2.imshow("transmitting video", frame)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("d"):
+                cap.release()
+                cv2.destroyAllWindows()
+                client_socket.close()
+                break
